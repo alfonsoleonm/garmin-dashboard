@@ -203,6 +203,11 @@ export function SettingsPage({ settings, onUpdate, onClear }: Props) {
           </button>
         </div>
       </div>
+
+      {/* Build version */}
+      <div style={{ marginTop: 24, marginBottom: 8, textAlign: 'center', fontSize: 11, color: 'var(--color-text-dim)' }}>
+        build {__APP_VERSION__}
+      </div>
     </div>
   )
 }

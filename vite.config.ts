@@ -1,9 +1,21 @@
+import { execSync } from 'child_process'
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+const APP_VERSION = (() => {
+  try {
+    return execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim()
+  } catch {
+    return 'dev'
+  }
+})()
+
 export default defineConfig({
   base: '/garmin-dashboard/',
+  define: {
+    __APP_VERSION__: JSON.stringify(APP_VERSION),
+  },
   plugins: [
     react(),
     VitePWA({
@@ -34,6 +46,9 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: '/garmin-dashboard/index.html',
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
             // Never cache API responses
