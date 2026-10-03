@@ -1,0 +1,6 @@
+node_modules
+dist
+.env*
+*.local
+*token*.json
+.DS_Store
