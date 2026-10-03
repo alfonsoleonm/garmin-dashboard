@@ -94,12 +94,10 @@ export function TodayPage({
             <RingGauge
               value={strainPct}
               label="Strain"
-              size={80}
-              strokeWidth={7}
               color="var(--color-blue)"
               centerText={strain != null ? strain.toFixed(1) : undefined}
             />
-            <RingGauge value={sleepScore} label="Sleep" size={80} strokeWidth={7} />
+            <RingGauge value={sleepScore} label="Sleep" />
           </div>
 
           {/* Cards */}

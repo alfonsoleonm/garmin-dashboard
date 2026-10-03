@@ -1,6 +1,7 @@
 interface RingGaugeProps {
   /** Fill level 0-100 (100 = full ring). */
   value: number | null
+  /** Max diameter in px; the ring scales down with its column. */
   size?: number
   strokeWidth?: number
   label: string
@@ -16,7 +17,7 @@ function zoneColor(value: number): string {
   return 'var(--color-red)'
 }
 
-export function RingGauge({ value, size = 96, strokeWidth = 9, label, color, centerText }: RingGaugeProps) {
+export function RingGauge({ value, size = 110, strokeWidth = 9, label, color, centerText }: RingGaugeProps) {
   const r = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * r
   const pct = value != null ? Math.min(Math.max(value / 100, 0), 1) : 0
@@ -29,8 +30,8 @@ export function RingGauge({ value, size = 96, strokeWidth = 9, label, color, cen
   return (
     <div className="ring-wrapper">
       <svg
-        width={size}
-        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        style={{ width: '100%', maxWidth: size, height: 'auto', aspectRatio: '1 / 1' }}
         role="img"
         aria-label={`${label}: ${display}`}
       >
