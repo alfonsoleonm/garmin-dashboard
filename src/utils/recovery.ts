@@ -1,11 +1,18 @@
 /**
- * Compute a 0-100 Recovery score from three components:
- *   sleep   (weight 0.40) = sleep_score / 100
- *   hrv     (weight 0.35) = clamp((last_night_avg_ms - baseline_low) / (baseline_upper - baseline_low), 0, 1)
- *   battery (weight 0.25) = body_battery_current / 100
+ * Compute a 0-100 Recovery score from three components (weights sum to 1.0):
  *
- * If any input is null/undefined, its weight is redistributed proportionally
- * among the remaining available inputs. If all three are null, returns null.
+ *   sleep   (0.40) = clamp(sleep_score / 100, 0, 1)
+ *
+ *   hrv     (0.35) = piecewise over the baseline band [L, H]:
+ *     hrv ≥ H           → 1.0                              (above band is optimal)
+ *     L ≤ hrv < H       → 0.6 + (hrv − L) / (H − L) × 0.4  (0.6 at L, 1.0 at H)
+ *     hrv < L (dist=L−hrv) → max(0, 0.6 × (1 − dist / bandWidth))
+ *                           (0.6 just below L, 0 at L − bandWidth and further)
+ *
+ *   battery (0.25) = clamp(body_battery_current / 100, 0, 1)
+ *
+ * If any input is unavailable, its weight is redistributed proportionally among
+ * the remaining components. All unavailable → returns null.
  */
 export function computeRecovery(
   sleepScore: number | null | undefined,
@@ -27,8 +34,19 @@ export function computeRecovery(
     hrvBaselineHigh != null &&
     hrvBaselineHigh > hrvBaselineLow
   ) {
-    const norm = (hrvAvgMs - hrvBaselineLow) / (hrvBaselineHigh - hrvBaselineLow)
-    components.push({ value: Math.min(Math.max(norm, 0), 1), weight: 0.35 })
+    const L = hrvBaselineLow
+    const H = hrvBaselineHigh
+    const bandWidth = H - L
+    let hrv_value: number
+    if (hrvAvgMs >= H) {
+      hrv_value = 1.0
+    } else if (hrvAvgMs >= L) {
+      hrv_value = 0.6 + ((hrvAvgMs - L) / bandWidth) * 0.4
+    } else {
+      const dist = L - hrvAvgMs
+      hrv_value = Math.max(0, 0.6 * (1 - dist / bandWidth))
+    }
+    components.push({ value: hrv_value, weight: 0.35 })
   }
 
   if (bodyBatteryCurrent != null) {

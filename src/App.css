@@ -53,6 +53,9 @@ body {
   overflow-y: auto;
   padding: var(--spacing-page);
   padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 16px);
+  width: 100%;
+  max-width: 480px;
+  align-self: center;
 }
 
 /* ── Cards ── */
@@ -388,6 +391,13 @@ body {
   border-top-color: var(--color-green);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.spinner-sm {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
 }
 
 /* ── No data state ── */

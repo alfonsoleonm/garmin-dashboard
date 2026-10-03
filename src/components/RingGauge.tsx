@@ -1,8 +1,13 @@
 interface RingGaugeProps {
-  value: number | null // 0-100
+  /** Fill level 0-100 (100 = full ring). */
+  value: number | null
   size?: number
   strokeWidth?: number
   label: string
+  /** Override zone-based color with an explicit CSS value. */
+  color?: string
+  /** Override the center text (default: Math.round(value)). */
+  centerText?: string
 }
 
 function zoneColor(value: number): string {
@@ -11,14 +16,15 @@ function zoneColor(value: number): string {
   return 'var(--color-red)'
 }
 
-export function RingGauge({ value, size = 96, strokeWidth = 9, label }: RingGaugeProps) {
+export function RingGauge({ value, size = 96, strokeWidth = 9, label, color, centerText }: RingGaugeProps) {
   const r = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * r
   const pct = value != null ? Math.min(Math.max(value / 100, 0), 1) : 0
   const offset = circumference * (1 - pct)
-  const color = value != null ? zoneColor(value) : 'var(--color-border)'
+  const ringColor = color ?? (value != null ? zoneColor(value) : 'var(--color-border)')
   const cx = size / 2
   const cy = size / 2
+  const display = centerText ?? (value != null ? String(Math.round(value)) : '—')
 
   return (
     <div className="ring-wrapper">
@@ -26,7 +32,7 @@ export function RingGauge({ value, size = 96, strokeWidth = 9, label }: RingGaug
         width={size}
         height={size}
         role="img"
-        aria-label={`${label}: ${value != null ? Math.round(value) : 'no data'}`}
+        aria-label={`${label}: ${display}`}
       >
         {/* track */}
         <circle
@@ -44,7 +50,7 @@ export function RingGauge({ value, size = 96, strokeWidth = 9, label }: RingGaug
             cy={cy}
             r={r}
             fill="none"
-            stroke={color}
+            stroke={ringColor}
             strokeWidth={strokeWidth}
             strokeDasharray={circumference}
             strokeDashoffset={offset}
@@ -59,11 +65,11 @@ export function RingGauge({ value, size = 96, strokeWidth = 9, label }: RingGaug
           y={cy}
           textAnchor="middle"
           dominantBaseline="central"
-          fill={color}
+          fill={ringColor}
           fontSize={size * 0.22}
           fontWeight={700}
         >
-          {value != null ? Math.round(value) : '—'}
+          {display}
         </text>
       </svg>
       <span className="ring-label">{label}</span>

@@ -20,9 +20,15 @@ const navStyle: React.CSSProperties = {
   paddingBottom: 'var(--safe-bottom)',
   background: 'var(--color-surface)',
   borderTop: '1px solid var(--color-border)',
+  zIndex: 100,
+}
+
+const navInnerStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'stretch',
-  zIndex: 100,
+  maxWidth: 480,
+  margin: '0 auto',
+  height: '100%',
 }
 
 const tabStyle = (active: boolean): React.CSSProperties => ({
@@ -46,17 +52,19 @@ const tabStyle = (active: boolean): React.CSSProperties => ({
 export function NavBar({ active, onChange }: NavBarProps) {
   return (
     <nav style={navStyle} role="navigation" aria-label="Main navigation">
-      {tabs.map(t => (
-        <button
-          key={t.id}
-          style={tabStyle(active === t.id)}
-          onClick={() => onChange(t.id)}
-          aria-current={active === t.id ? 'page' : undefined}
-        >
-          <span style={{ fontSize: 20 }}>{t.icon}</span>
-          {t.label}
-        </button>
-      ))}
+      <div style={navInnerStyle}>
+        {tabs.map(t => (
+          <button
+            key={t.id}
+            style={tabStyle(active === t.id)}
+            onClick={() => onChange(t.id)}
+            aria-current={active === t.id ? 'page' : undefined}
+          >
+            <span style={{ fontSize: 20 }}>{t.icon}</span>
+            {t.label}
+          </button>
+        ))}
+      </div>
     </nav>
   )
 }

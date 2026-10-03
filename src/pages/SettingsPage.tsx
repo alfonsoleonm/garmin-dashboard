@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { validateBaseUrl } from '../api/garmin'
+import { useState, useRef } from 'react'
+import { validateBaseUrl, testConnection, type ConnectionTestResult } from '../api/garmin'
 import type { Settings } from '../hooks/useSettings'
 
 interface Props {
@@ -8,6 +8,8 @@ interface Props {
   onClear: () => void
 }
 
+type TestPhase = 'idle' | 'testing' | 'done'
+
 export function SettingsPage({ settings, onUpdate, onClear }: Props) {
   const [baseUrl, setBaseUrl] = useState(settings.baseUrl)
   const [apiKey, setApiKey] = useState(settings.apiKey)
@@ -15,11 +17,17 @@ export function SettingsPage({ settings, onUpdate, onClear }: Props) {
   const [urlError, setUrlError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
+  // Test connection state
+  const [testPhase, setTestPhase] = useState<TestPhase>('idle')
+  const [testResult, setTestResult] = useState<ConnectionTestResult | null>(null)
+  const [testSlow, setTestSlow] = useState(false)
+  const testAbortRef = useRef<AbortController | null>(null)
+
   function save() {
     setUrlError(null)
     if (baseUrl.trim() && !settings.demoMode) {
       try {
-        validateBaseUrl(baseUrl)
+        validateBaseUrl(baseUrl, window.location.origin)
       } catch (err) {
         setUrlError(err instanceof Error ? err.message : 'Invalid URL')
         return
@@ -29,6 +37,37 @@ export function SettingsPage({ settings, onUpdate, onClear }: Props) {
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
+
+  async function handleTest() {
+    // Cancel an in-flight test
+    if (testPhase === 'testing') {
+      testAbortRef.current?.abort()
+      setTestPhase('idle')
+      setTestSlow(false)
+      return
+    }
+
+    testAbortRef.current?.abort()
+    const controller = new AbortController()
+    testAbortRef.current = controller
+
+    setTestPhase('testing')
+    setTestResult(null)
+    setTestSlow(false)
+
+    const timeoutId = setTimeout(() => controller.abort(), 60_000)
+    const wakeupId = setTimeout(() => setTestSlow(true), 5_000)
+
+    const result = await testConnection(baseUrl.trim(), apiKey.trim(), controller.signal, window.location.origin)
+
+    clearTimeout(timeoutId)
+    clearTimeout(wakeupId)
+    setTestSlow(false)
+    setTestResult(result)
+    setTestPhase('done')
+  }
+
+  const canTest = !settings.demoMode && baseUrl.trim().length > 0 && apiKey.trim().length > 0
 
   const asOf = settings.lastFetch
     ? new Date(settings.lastFetch).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })
@@ -71,11 +110,13 @@ export function SettingsPage({ settings, onUpdate, onClear }: Props) {
           <label htmlFor="base-url">API Base URL</label>
           <input
             id="base-url"
+            name="gd-base-url"
             type="url"
             value={baseUrl}
-            onChange={e => setBaseUrl(e.target.value)}
+            onChange={e => { setBaseUrl(e.target.value); setTestPhase('idle'); setTestResult(null) }}
             placeholder="https://your-api.example.com"
             autoComplete="off"
+            autoCapitalize="off"
             spellCheck={false}
             disabled={settings.demoMode}
           />
@@ -90,11 +131,12 @@ export function SettingsPage({ settings, onUpdate, onClear }: Props) {
           <div style={{ position: 'relative' }}>
             <input
               id="api-key"
+              name="gd-api-key"
               type={showKey ? 'text' : 'password'}
               value={apiKey}
-              onChange={e => setApiKey(e.target.value)}
+              onChange={e => { setApiKey(e.target.value); setTestPhase('idle'); setTestResult(null) }}
               placeholder="Enter your API key"
-              autoComplete="off"
+              autoComplete="new-password"
               disabled={settings.demoMode}
               style={{ paddingRight: 44 }}
             />
@@ -111,9 +153,36 @@ export function SettingsPage({ settings, onUpdate, onClear }: Props) {
           <div className="field-hint">Stored in localStorage on this device only</div>
         </div>
 
-        <button className="btn btn-primary" onClick={save} style={{ width: '100%' }}>
-          {saved ? '✓ Saved' : 'Save'}
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn btn-primary" onClick={save} style={{ flex: 1 }}>
+            {saved ? '✓ Saved' : 'Save'}
+          </button>
+          <button
+            className="btn btn-secondary"
+            onClick={handleTest}
+            disabled={!canTest && testPhase !== 'testing'}
+            aria-label="Test API connection"
+            title={!canTest ? 'Enter a URL and API key first' : undefined}
+          >
+            {testPhase === 'testing' ? 'Cancel' : 'Test connection'}
+          </button>
+        </div>
+
+        {/* Test connection status */}
+        {testPhase === 'testing' && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12, fontSize: 13, color: 'var(--color-text-secondary)' }}>
+            <div className="spinner spinner-sm" />
+            {testSlow ? 'Waking up the server…' : 'Testing connection…'}
+          </div>
+        )}
+        {testPhase === 'done' && testResult && (
+          <div
+            className={`banner ${testResult.ok ? 'banner-demo' : 'banner-error'}`}
+            style={{ marginTop: 12 }}
+          >
+            {testResult.ok ? '✓' : '✗'} {testResult.message} — {(testResult.elapsedMs / 1000).toFixed(1)}s
+          </div>
+        )}
       </div>
 
       {/* Danger zone */}
