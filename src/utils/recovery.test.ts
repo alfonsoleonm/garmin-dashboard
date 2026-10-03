@@ -4,6 +4,8 @@ import { computeRecovery } from './recovery'
 // HRV component helper for tests: hrv=55, baseline=[40,70]
 // bandWidth=30, t=(55-40)/30=0.5, hrv_value=0.6+0.5*0.4=0.8
 const HRV_55_IN_40_70 = 0.8
+// Last argument to computeRecovery is the peak body battery level (highest reading
+// for the day, a proxy for wake-up level; falls back to current when unavailable).
 
 describe('computeRecovery', () => {
   it('computes score when all inputs are present (hrv inside band, mid-position)', () => {

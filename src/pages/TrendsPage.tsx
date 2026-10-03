@@ -71,7 +71,7 @@ export function TrendsPage({ data }: Props) {
         <ResponsiveContainer width="100%" height={120}>
           <BarChart data={sleepData} barSize={18}>
             <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-            <YAxis domain={[0, 10]} tick={{ fontSize: 11 }} width={24} />
+            <YAxis domain={[0, 10]} ticks={[0, 2, 4, 6, 8, 10]} tick={{ fontSize: 11 }} width={24} />
             <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [`${v}h`, 'Sleep']} />
             <ReferenceLine y={7} stroke="var(--color-green)" strokeDasharray="4 4" />
             <Bar dataKey="hours" fill="var(--color-blue)" radius={[4, 4, 0, 0]} />
@@ -84,7 +84,7 @@ export function TrendsPage({ data }: Props) {
         <ResponsiveContainer width="100%" height={120}>
           <LineChart data={sleepData}>
             <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-            <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} width={28} />
+            <YAxis domain={[40, 100]} ticks={[40, 60, 80, 100]} tick={{ fontSize: 11 }} width={28} />
             <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [v, 'Score']} />
             <ReferenceLine y={80} stroke="var(--color-green)" strokeDasharray="4 4" />
             <Line type="monotone" dataKey="score" stroke="var(--color-amber)" strokeWidth={2} dot={{ r: 3 }} />
@@ -97,9 +97,9 @@ export function TrendsPage({ data }: Props) {
         <ResponsiveContainer width="100%" height={120}>
           <BarChart data={strainData} barSize={18}>
             <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-            <YAxis domain={[0, 21]} tick={{ fontSize: 11 }} width={24} />
+            <YAxis domain={[0, 21]} ticks={[0, 7, 14, 21]} tick={{ fontSize: 11 }} width={24} />
             <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [v, 'Strain']} />
-            <Bar dataKey="strain" fill="var(--color-amber)" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="strain" fill="var(--color-blue)" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </MetricCard>

@@ -9,7 +9,9 @@
  *     hrv < L (dist=L−hrv) → max(0, 0.6 × (1 − dist / bandWidth))
  *                           (0.6 just below L, 0 at L − bandWidth and further)
  *
- *   battery (0.25) = clamp(body_battery_current / 100, 0, 1)
+ *   battery (0.25) = peak body battery for the day (highest reading, a proxy for
+ *                    wake-up level); falls back to current reading when highest
+ *                    is unavailable. Clamped to [0, 1].
  *
  * If any input is unavailable, its weight is redistributed proportionally among
  * the remaining components. All unavailable → returns null.
@@ -19,7 +21,7 @@ export function computeRecovery(
   hrvAvgMs: number | null | undefined,
   hrvBaselineLow: number | null | undefined,
   hrvBaselineHigh: number | null | undefined,
-  bodyBatteryCurrent: number | null | undefined,
+  bodyBatteryLevel: number | null | undefined,
 ): number | null {
   type Component = { value: number; weight: number }
   const components: Component[] = []
@@ -49,8 +51,8 @@ export function computeRecovery(
     components.push({ value: hrv_value, weight: 0.35 })
   }
 
-  if (bodyBatteryCurrent != null) {
-    components.push({ value: Math.min(Math.max(bodyBatteryCurrent / 100, 0), 1), weight: 0.25 })
+  if (bodyBatteryLevel != null) {
+    components.push({ value: Math.min(Math.max(bodyBatteryLevel / 100, 0), 1), weight: 0.25 })
   }
 
   if (components.length === 0) return null

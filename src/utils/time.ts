@@ -25,7 +25,7 @@ export function parseSleepTime(value: number | string | null | undefined): Date 
 }
 
 export function formatTime(date: Date): string {
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
 }
 
 export function formatDuration(seconds: number): string {

@@ -20,10 +20,9 @@ function activityIcon(type: string | null | undefined): string {
 
 function formatType(type: string | null | undefined): string {
   if (!type) return 'Activity'
-  return type
-    .split('_')
-    .map(w => w.charAt(0) + w.slice(1).toLowerCase())
-    .join(' ')
+  const words = type.split('_').map(w => w.toLowerCase())
+  words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1)
+  return words.join(' ')
 }
 
 export function ActivitiesCard({ activities }: Props) {

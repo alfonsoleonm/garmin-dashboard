@@ -36,7 +36,7 @@ export function TodayPage({
     hrv?.last_night_avg_ms,
     hrv?.baseline_balanced_low,
     hrv?.baseline_balanced_upper,
-    battery?.current,
+    battery?.highest ?? battery?.current,
   )
 
   const todayTrimp = data?.strain_7d?.[todayStr]
